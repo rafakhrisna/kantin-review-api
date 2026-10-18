@@ -1,11 +1,12 @@
-// server.js
-// Entry point aplikasi Express.js
-
 require('dotenv').config();
 const express = require('express');
+const swaggerUi = require('swagger-ui-express');
 const { getPool } = require('./config/db');
+const { authenticate, authorize } = require('./middleware/auth');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
+const openapi = require('./docs/openapi');
 
+const authRoutes = require('./routes/auth.routes');
 const usersRoutes = require('./routes/users.routes');
 const stallsRoutes = require('./routes/stalls.routes');
 const menuItemsRoutes = require('./routes/menuItems.routes');
@@ -17,31 +18,32 @@ const auditLogsRoutes = require('./routes/auditLogs.routes');
 const app = express();
 app.use(express.json());
 
-// Health check sederhana
 app.get('/', (req, res) => {
-  res.json({ success: true, message: 'Kantin Review API sedang berjalan 🚀' });
+  res.json({ success: true, message: 'Kantin Review API sedang berjalan. Dokumentasi: /docs' });
 });
 
-// Routing per tabel
-app.use('/api/users', usersRoutes);
-app.use('/api/stalls', stallsRoutes);
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapi, { swaggerOptions: { persistAuthorization: true } }));
+
+app.use(['/api/auth', '/auth'], authRoutes);
+app.use(['/api/stalls', '/stalls'], stallsRoutes);
+
 app.use('/api/menu-items', menuItemsRoutes);
 app.use('/api/reviews', reviewsRoutes);
-app.use('/api/likes', likesRoutes);
-app.use('/api/flags', flagsRoutes);
-app.use('/api/audit-logs', auditLogsRoutes);
+app.use('/api/likes', authenticate, likesRoutes);
+app.use('/api/users', authenticate, authorize('admin'), usersRoutes);
+app.use('/api/flags', authenticate, authorize('admin'), flagsRoutes);
+app.use('/api/audit-logs', authenticate, authorize('admin'), auditLogsRoutes);
 
-// 404 & error handler (harus di paling bawah)
 app.use(notFound);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
 
-// Pastikan koneksi DB berhasil sebelum server mulai menerima request
 getPool()
   .then(() => {
     app.listen(PORT, () => {
-      console.log(`🚀 Server berjalan di http://localhost:${PORT}`);
+      console.log(`Server berjalan di http://localhost:${PORT}`);
+      console.log(`Dokumentasi API di http://localhost:${PORT}/docs`);
     });
   })
   .catch((err) => {

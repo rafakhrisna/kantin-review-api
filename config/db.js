@@ -1,7 +1,3 @@
-// config/db.js
-// Koneksi ke SQL Server menggunakan package 'mssql'.
-// Kredensial diambil dari .env (JANGAN hardcode kredensial di source code).
-
 const sql = require('mssql');
 require('dotenv').config();
 

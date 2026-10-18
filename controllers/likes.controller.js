@@ -1,10 +1,6 @@
-// controllers/likes.controller.js
-// LIKES -> kewajiban: POST, DELETE
-
 const { sql, getPool } = require('../config/db');
 const { ApiError } = require('../middleware/errorHandler');
 
-// POST /api/likes
 async function createLike(req, res) {
   const { review_id, user_id } = req.body;
   if (!review_id || !user_id) {
@@ -41,7 +37,6 @@ async function createLike(req, res) {
   }
 }
 
-// DELETE /api/likes/:id
 async function deleteLike(req, res) {
   const { id } = req.params;
   const pool = await getPool();

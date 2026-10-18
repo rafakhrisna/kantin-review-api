@@ -1,10 +1,6 @@
-// controllers/flags.controller.js
-// FLAGS -> kewajiban: GET, PUT (update status)
-
 const { sql, getPool } = require('../config/db');
 const { ApiError } = require('../middleware/errorHandler');
 
-// GET /api/flags?status=
 async function getFlags(req, res) {
   const { status } = req.query;
   const pool = await getPool();
@@ -22,7 +18,6 @@ async function getFlags(req, res) {
   res.status(200).json({ success: true, data: result.recordset });
 }
 
-// PUT /api/flags/:id  Body: { status: 'resolved' | 'dismissed' | 'pending' }
 async function updateFlagStatus(req, res) {
   const { id } = req.params;
   const { status } = req.body;

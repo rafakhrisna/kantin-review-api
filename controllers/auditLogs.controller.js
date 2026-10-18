@@ -1,10 +1,6 @@
-// controllers/auditLogs.controller.js
-// AUDIT_LOGS -> kewajiban: GET, POST
-
 const { sql, getPool } = require('../config/db');
 const { ApiError } = require('../middleware/errorHandler');
 
-// GET /api/audit-logs
 async function getAuditLogs(req, res) {
   const pool = await getPool();
   const result = await pool.request().query(`
@@ -13,7 +9,6 @@ async function getAuditLogs(req, res) {
   res.status(200).json({ success: true, data: result.recordset });
 }
 
-// POST /api/audit-logs
 async function createAuditLog(req, res) {
   const { user_id, action, target_table, target_id, metadata } = req.body;
   if (!user_id || !action || !target_table || !target_id) {

@@ -1,10 +1,6 @@
-// controllers/reviews.controller.js
-// REVIEWS -> kewajiban: GET, POST, DELETE + JOIN user
-
 const { sql, getPool } = require('../config/db');
 const { ApiError } = require('../middleware/errorHandler');
 
-// GET /api/reviews?stall_id=  (JOIN ke USERS untuk menampilkan nama reviewer)
 async function getReviews(req, res) {
   const { stall_id } = req.query;
   const pool = await getPool();
@@ -27,36 +23,37 @@ async function getReviews(req, res) {
   res.status(200).json({ success: true, data: result.recordset });
 }
 
-// POST /api/reviews
-// Catatan: UQ_REVIEWS_user_stall membatasi 1 user hanya bisa 1 review per stall.
-async function createReview(req, res) {
-  const { stall_id, user_id, rating, comment } = req.body;
-  if (!stall_id || !user_id || rating === undefined) {
-    throw new ApiError(400, 'Field stall_id, user_id, dan rating wajib diisi');
-  }
-  if (rating < 1 || rating > 5) {
-    throw new ApiError(400, 'rating harus antara 1 dan 5');
-  }
+async function createStallReview(req, res) {
+  const { id: stallId } = req.validated.params;
+  const { rating, comment } = req.validated.body;
+  const userId = req.user.id;
 
   const pool = await getPool();
+
+  const stall = await pool
+    .request()
+    .input('id', sql.Int, stallId)
+    .query('SELECT id FROM dbo.STALLS WHERE id = @id');
+  if (stall.recordset.length === 0) {
+    throw new ApiError(404, `Stall dengan id ${stallId} tidak ditemukan`);
+  }
+
   const transaction = new sql.Transaction(pool);
   await transaction.begin();
-
   try {
     const insertResult = await new sql.Request(transaction)
-      .input('stall_id', sql.Int, stall_id)
-      .input('user_id', sql.Int, user_id)
+      .input('stall_id', sql.Int, stallId)
+      .input('user_id', sql.Int, userId)
       .input('rating', sql.Int, rating)
-      .input('comment', sql.NVarChar(sql.MAX), comment || null)
+      .input('comment', sql.NVarChar(sql.MAX), comment ?? null)
       .query(`
         INSERT INTO dbo.REVIEWS (stall_id, user_id, rating, comment)
         OUTPUT INSERTED.*
         VALUES (@stall_id, @user_id, @rating, @comment)
       `);
 
-    // Update avg_rating & review_count pada STALLS agar tetap konsisten
     await new sql.Request(transaction)
-      .input('stall_id', sql.Int, stall_id)
+      .input('stall_id', sql.Int, stallId)
       .query(`
         UPDATE dbo.STALLS
         SET review_count = (SELECT COUNT(*) FROM dbo.REVIEWS WHERE stall_id = @stall_id),
@@ -68,11 +65,13 @@ async function createReview(req, res) {
     res.status(201).json({ success: true, data: insertResult.recordset[0] });
   } catch (err) {
     await transaction.rollback();
+    if (err.number === 2627 || err.number === 2601) {
+      throw new ApiError(409, 'Anda sudah pernah mereview warung ini');
+    }
     throw err;
   }
 }
 
-// DELETE /api/reviews/:id
 async function deleteReview(req, res) {
   const { id } = req.params;
   const pool = await getPool();
@@ -87,7 +86,6 @@ async function deleteReview(req, res) {
   await transaction.begin();
   try {
     await new sql.Request(transaction).input('id', sql.Int, id).query('DELETE FROM dbo.REVIEWS WHERE id = @id');
-
     await new sql.Request(transaction)
       .input('stall_id', sql.Int, stall_id)
       .query(`
@@ -96,7 +94,6 @@ async function deleteReview(req, res) {
             avg_rating = ISNULL((SELECT AVG(CAST(rating AS DECIMAL(3,2))) FROM dbo.REVIEWS WHERE stall_id = @stall_id), 0)
         WHERE id = @stall_id
       `);
-
     await transaction.commit();
     res.status(200).json({ success: true, message: `Review id ${id} berhasil dihapus` });
   } catch (err) {
@@ -105,4 +102,4 @@ async function deleteReview(req, res) {
   }
 }
 
-module.exports = { getReviews, createReview, deleteReview };
+module.exports = { getReviews, createStallReview, deleteReview };

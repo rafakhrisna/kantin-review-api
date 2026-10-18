@@ -1,53 +1,43 @@
-// middleware/errorHandler.js
-// Error handler terpusat: semua error dari controller (lewat next(err)) berakhir di sini,
-// jadi format response error konsisten di seluruh API.
+class ApiError extends Error {
+  constructor(statusCode, message, errors) {
+    super(message);
+    this.statusCode = statusCode;
+    if (errors) this.errors = errors;
+  }
+}
 
-function notFound(req, res, next) {
+function notFound(req, res) {
   res.status(404).json({
-    success: false,
+    status: 'fail',
     message: `Route ${req.method} ${req.originalUrl} tidak ditemukan`,
   });
 }
 
 function errorHandler(err, req, res, next) {
-  console.error(err);
+  let statusCode = err.statusCode || err.status || 500;
+  let message = err.message;
+  let errors = err.errors;
 
-  // Unique constraint violation (SQL Server error number 2627 / 2601)
-  if (err.number === 2627 || err.number === 2601) {
-    return res.status(409).json({
-      success: false,
-      message: 'Data duplikat: melanggar unique constraint',
-    });
+  if (err.type === 'entity.parse.failed') {
+    statusCode = 400;
+    message = 'Body request bukan JSON yang valid';
+  } else if (err.number === 2627 || err.number === 2601) {
+    statusCode = 409;
+    message = 'Data duplikat: melanggar unique constraint';
+  } else if (err.number === 547) {
+    statusCode = 409;
+    message = 'Operasi melanggar foreign key / check constraint';
   }
 
-  // Foreign key violation
-  if (err.number === 547) {
-    return res.status(409).json({
-      success: false,
-      message: 'Operasi melanggar foreign key constraint (data terkait tidak ditemukan atau masih direferensikan)',
-    });
+  if (statusCode >= 500) {
+    console.error(err);
+    message = 'Terjadi kesalahan pada server';
+    errors = undefined;
   }
 
-  // Check constraint violation
-  if (err.number === 547 && /CK_/.test(err.message)) {
-    return res.status(400).json({
-      success: false,
-      message: 'Data tidak valid: melanggar check constraint',
-    });
-  }
-
-  const statusCode = err.statusCode || 500;
-  res.status(statusCode).json({
-    success: false,
-    message: err.message || 'Terjadi kesalahan pada server',
-  });
+  const body = { status: statusCode >= 500 ? 'error' : 'fail', message };
+  if (errors) body.errors = errors;
+  res.status(statusCode).json(body);
 }
 
-class ApiError extends Error {
-  constructor(statusCode, message) {
-    super(message);
-    this.statusCode = statusCode;
-  }
-}
-
-module.exports = { notFound, errorHandler, ApiError };
+module.exports = { ApiError, notFound, errorHandler };

@@ -1,0 +1,99 @@
+@host = http://localhost:3000
+
+###
+POST {{host}}/auth/register
+Content-Type: application/json
+
+{ "name": "ab", "email": "bukan-email", "password": "123" }
+
+###
+POST {{host}}/auth/register
+Content-Type: application/json
+
+{ "name": "Pelanggan Baru", "email": "pelanggan@mail.com", "password": "rahasia123" }
+
+###
+# @name loginRafa
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{ "email": "rafa@kantin.test", "password": "password123" }
+
+###
+# @name loginAdmin
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{ "email": "admin@kantin.test", "password": "password123" }
+
+###
+# @name loginBudi
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{ "email": "budi@kantin.test", "password": "password123" }
+
+###
+# @name loginSiti
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{ "email": "siti@kantin.test", "password": "password123" }
+
+###
+GET {{host}}/auth/me
+Authorization: Bearer {{loginRafa.response.body.$.data.token}}
+
+###
+GET {{host}}/auth/me
+
+###
+POST {{host}}/stalls
+Authorization: Bearer {{loginRafa.response.body.$.data.token}}
+Content-Type: application/json
+
+{ "name": "Warung Customer" }
+
+###
+# @name createSitiStall
+POST {{host}}/stalls
+Authorization: Bearer {{loginSiti.response.body.$.data.token}}
+Content-Type: application/json
+
+{ "name": "Warung Milik Siti", "category": "Soto", "location": "Blok D" }
+
+###
+PUT {{host}}/stalls/{{createSitiStall.response.body.$.data.id}}
+Authorization: Bearer {{loginBudi.response.body.$.data.token}}
+Content-Type: application/json
+
+{ "name": "Dibajak Budi" }
+
+### 
+PUT {{host}}/stalls/{{createSitiStall.response.body.$.data.id}}
+Authorization: Bearer {{loginSiti.response.body.$.data.token}}
+Content-Type: application/json
+
+{ "name": "Warung Siti Update" }
+
+###
+DELETE {{host}}/stalls/{{createSitiStall.response.body.$.data.id}}
+Authorization: Bearer {{loginRafa.response.body.$.data.token}}
+
+###
+DELETE {{host}}/stalls/{{createSitiStall.response.body.$.data.id}}
+Authorization: Bearer {{loginAdmin.response.body.$.data.token}}
+
+###
+POST {{host}}/stalls/1/reviews
+Authorization: Bearer {{loginRafa.response.body.$.data.token}}
+Content-Type: application/json
+
+{ "rating": 5, "comment": "Enak dan murah" }
+
+###
+GET {{host}}/stalls?page=0&limit=500
+
+###
+# 
+GET {{host}}/stalls/9999

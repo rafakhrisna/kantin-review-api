@@ -1,10 +1,6 @@
-// controllers/menuItems.controller.js
-// MENU_ITEMS -> kewajiban: Full CRUD + JOIN stall
-
 const { sql, getPool } = require('../config/db');
 const { ApiError } = require('../middleware/errorHandler');
 
-// GET /api/menu-items  (JOIN ke STALLS untuk menampilkan nama stall)
 async function getMenuItems(req, res) {
   const { stall_id } = req.query;
   const pool = await getPool();
@@ -26,7 +22,6 @@ async function getMenuItems(req, res) {
   res.status(200).json({ success: true, data: result.recordset });
 }
 
-// GET /api/menu-items/:id
 async function getMenuItemById(req, res) {
   const { id } = req.params;
   const pool = await getPool();
@@ -46,7 +41,6 @@ async function getMenuItemById(req, res) {
   res.status(200).json({ success: true, data: result.recordset[0] });
 }
 
-// POST /api/menu-items
 async function createMenuItem(req, res) {
   const { stall_id, name, price, is_available } = req.body;
   if (!stall_id || !name || price === undefined) {
@@ -72,7 +66,6 @@ async function createMenuItem(req, res) {
   res.status(201).json({ success: true, data: result.recordset[0] });
 }
 
-// PUT /api/menu-items/:id
 async function updateMenuItem(req, res) {
   const { id } = req.params;
   const { name, price, is_available } = req.body;
@@ -104,7 +97,6 @@ async function updateMenuItem(req, res) {
   res.status(200).json({ success: true, data: result.recordset[0] });
 }
 
-// DELETE /api/menu-items/:id
 async function deleteMenuItem(req, res) {
   const { id } = req.params;
   const pool = await getPool();

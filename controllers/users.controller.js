@@ -1,11 +1,7 @@
-// controllers/users.controller.js
-// USERS -> kewajiban: GET (list), POST
-
 const bcrypt = require('bcryptjs');
 const { sql, getPool } = require('../config/db');
 const { ApiError } = require('../middleware/errorHandler');
 
-// GET /api/users
 async function getUsers(req, res) {
   const pool = await getPool();
   const result = await pool.request().query(`
@@ -16,9 +12,6 @@ async function getUsers(req, res) {
   res.status(200).json({ success: true, data: result.recordset });
 }
 
-// POST /api/users
-// Body: { name, email, password, role }
-// Password di-hash (bcrypt) sebelum disimpan sebagai password_hash -> tidak pernah simpan plaintext.
 async function createUser(req, res) {
   const { name, email, password, role } = req.body;
 
