@@ -1,4 +1,5 @@
 require('dotenv').config();
+const cors = require('cors');
 const express = require('express');
 const swaggerUi = require('swagger-ui-express');
 const { getPool } = require('./config/db');
@@ -16,6 +17,7 @@ const flagsRoutes = require('./routes/flags.routes');
 const auditLogsRoutes = require('./routes/auditLogs.routes');
 
 const app = express();
+app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:5173' }));
 app.use(express.json());
 
 app.get('/', (req, res) => {
