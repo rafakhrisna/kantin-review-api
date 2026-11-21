@@ -8,8 +8,9 @@ Aplikasi review kantin: backend Express.js + SQL Server, frontend React (TypeScr
 
 ## Instalasi
 1. Siapkan database `kantin_review` di SQL Server (jalankan `db/schema.sql`, `db/01-create-login.sql`, seed data).
-2. Backend (folder root): `npm install`, lalu `node scripts/seed-accounts.js` untuk membuat akun uji.
-3. Frontend: `cd frontend` lalu `npm install`.
+2. Jalankan juga `backend/db/03-audit-hardening.sql` untuk mengaktifkan trigger append-only dan pembatasan akses pada AUDIT_LOGS.
+3. Backend (folder root): `npm install`, lalu `node scripts/seed-accounts.js` untuk membuat akun uji.
+4. Frontend: `cd frontend` lalu `npm install`.
 
 ## Konfigurasi environment
 - Root: salin `.env.example` menjadi `.env`, isi kredensial database dan `JWT_SECRET`.
