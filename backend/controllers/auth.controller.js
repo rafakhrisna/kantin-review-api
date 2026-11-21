@@ -2,7 +2,10 @@ const bcrypt = require('bcryptjs');
 const { sql, getPool } = require('../config/db');
 const { signToken } = require('../config/jwt');
 const { ApiError } = require('../middleware/errorHandler');
+const { writeAuditBestEffort } = require('../services/audit.service');
+const { getClientInfo } = require('../utils/requestInfo');
 
+// POST /auth/register  -> role SELALU 'customer'
 async function register(req, res) {
   const { name, email, password } = req.validated.body;
   const pool = await getPool();
@@ -15,7 +18,7 @@ async function register(req, res) {
     throw new ApiError(409, 'Email sudah terdaftar');
   }
 
-  const passwordHash = await bcrypt.hash(password, 10); 
+  const passwordHash = await bcrypt.hash(password, 10);
 
   const result = await pool
     .request()
@@ -32,6 +35,7 @@ async function register(req, res) {
   res.status(201).json({ success: true, message: 'Registrasi berhasil', data: result.recordset[0] });
 }
 
+// POST /auth/login  (+ audit LOGIN, best-effort)
 async function login(req, res) {
   const { email, password } = req.validated.body;
   const pool = await getPool();
@@ -43,6 +47,18 @@ async function login(req, res) {
 
   const user = result.recordset[0];
   const valid = user && (await bcrypt.compare(password, user.password_hash));
+
+  // Dicatat untuk login berhasil DAN gagal, selama akunnya ada (user_id wajib terisi).
+  // Email yang tidak terdaftar tidak bisa dicatat karena tidak ada user_id.
+  if (user) {
+    await writeAuditBestEffort({
+      userId: user.id,
+      action: 'LOGIN',
+      targetTable: 'USERS',
+      targetId: user.id,
+      metadata: { role: user.role, ...getClientInfo(req), result: valid ? 'success' : 'failed' },
+    });
+  }
 
   if (!valid) {
     throw new ApiError(401, 'Email atau password salah');
@@ -56,6 +72,19 @@ async function login(req, res) {
   });
 }
 
+// POST /auth/logout  (harus login) -> audit LOGOUT, best-effort
+async function logout(req, res) {
+  await writeAuditBestEffort({
+    userId: req.user.id, // dari token, bukan dari body
+    action: 'LOGOUT',
+    targetTable: 'USERS',
+    targetId: req.user.id,
+    metadata: { role: req.user.role, ...getClientInfo(req), result: 'success' },
+  });
+  res.status(200).json({ success: true, message: 'Logout berhasil' });
+}
+
+// GET /auth/me
 async function me(req, res) {
   const pool = await getPool();
   const result = await pool
@@ -69,4 +98,4 @@ async function me(req, res) {
   res.status(200).json({ success: true, data: result.recordset[0] });
 }
 
-module.exports = { register, login, me };
+module.exports = { register, login, logout, me };

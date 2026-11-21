@@ -4,10 +4,11 @@ const asyncHandler = require('../utils/asyncHandler');
 const validate = require('../middleware/validate');
 const { authenticate } = require('../middleware/auth');
 const { registerBody, loginBody } = require('../validators/auth');
-const { register, login, me } = require('../controllers/auth.controller');
+const { register, login, logout, me } = require('../controllers/auth.controller');
 
 router.post('/register', validate({ body: registerBody }), asyncHandler(register));
 router.post('/login', validate({ body: loginBody }), asyncHandler(login));
+router.post('/logout', authenticate, asyncHandler(logout));
 router.get('/me', authenticate, asyncHandler(me));
 
 module.exports = router;
