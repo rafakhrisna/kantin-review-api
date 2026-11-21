@@ -1,0 +1,129 @@
+@host = http://localhost:3000
+
+###
+# @name loginAdmin
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{ "email": "admin@kantin.test", "password": "password123" }
+
+###
+# @name loginOwner
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{ "email": "budi@kantin.test", "password": "password123" }
+
+###
+# @name loginCustomer
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{ "email": "rafa@kantin.test", "password": "password123" }
+
+###
+# [B1] Daftar audit (admin)
+GET {{host}}/api/audit-logs
+Authorization: Bearer {{loginAdmin.response.body.$.data.token}}
+
+###
+# [B2] Detail audit (ganti 1 dengan id yang ada)
+GET {{host}}/api/audit-logs/1
+Authorization: Bearer {{loginAdmin.response.body.$.data.token}}
+
+###
+# [B3] Filter targetId
+GET {{host}}/api/audit-logs?targetId=1
+Authorization: Bearer {{loginAdmin.response.body.$.data.token}}
+
+###
+# [B4] Filter userId
+GET {{host}}/api/audit-logs?userId=1
+Authorization: Bearer {{loginAdmin.response.body.$.data.token}}
+
+###
+# [B5] Filter gabungan (AND) + pagination
+GET {{host}}/api/audit-logs?action=LOGIN&userId=1&pageSize=2&page=1
+Authorization: Bearer {{loginAdmin.response.body.$.data.token}}
+
+###
+# [L1] LOGOUT dengan user agent khusus
+POST {{host}}/auth/logout
+Authorization: Bearer {{loginCustomer.response.body.$.data.token}}
+User-Agent: Mozilla/5.0 (Pengujian Tugas5)
+
+###
+# [B6] Lihat catatan LOGOUT
+GET {{host}}/api/audit-logs?action=LOGOUT
+Authorization: Bearer {{loginAdmin.response.body.$.data.token}}
+
+###
+# [G1] 404: id tidak ada
+GET {{host}}/api/audit-logs/999999
+Authorization: Bearer {{loginAdmin.response.body.$.data.token}}
+
+###
+# [G2] 401: tanpa token
+GET {{host}}/api/audit-logs
+
+###
+# [G3] 403: owner
+GET {{host}}/api/audit-logs
+Authorization: Bearer {{loginOwner.response.body.$.data.token}}
+
+###
+# [G4] 403: customer
+GET {{host}}/api/audit-logs
+Authorization: Bearer {{loginCustomer.response.body.$.data.token}}
+
+###
+# [G5] 400: page=0
+GET {{host}}/api/audit-logs?page=0
+Authorization: Bearer {{loginAdmin.response.body.$.data.token}}
+
+###
+# [G6] 400: pageSize=101
+GET {{host}}/api/audit-logs?pageSize=101
+Authorization: Bearer {{loginAdmin.response.body.$.data.token}}
+
+###
+# [G7] 400: from lebih besar dari to
+GET {{host}}/api/audit-logs?from=2026-12-01&to=2026-11-01
+Authorization: Bearer {{loginAdmin.response.body.$.data.token}}
+
+###
+# [G8] 400: tanggal tidak ada di kalender
+GET {{host}}/api/audit-logs?from=2026-02-30
+Authorization: Bearer {{loginAdmin.response.body.$.data.token}}
+
+###
+# [G9] 400: parameter tidak dikenal
+GET {{host}}/api/audit-logs?foo=1
+Authorization: Bearer {{loginAdmin.response.body.$.data.token}}
+
+###
+# [G10] 400: targetId bukan bilangan positif
+GET {{host}}/api/audit-logs?targetId=abc
+Authorization: Bearer {{loginAdmin.response.body.$.data.token}}
+
+###
+# [M1] Menu: buat item (audit CREATE_MENU)
+# @name createMenu
+POST {{host}}/api/menu-items
+Authorization: Bearer {{loginAdmin.response.body.$.data.token}}
+Content-Type: application/json
+
+{ "stall_id": 1, "name": "Es Teh Audit", "price": 5000 }
+
+###
+# [M2] Menu: ubah harga (audit UPDATE_MENU)
+PUT {{host}}/api/menu-items/{{createMenu.response.body.$.data.id}}
+Authorization: Bearer {{loginAdmin.response.body.$.data.token}}
+Content-Type: application/json
+
+{ "price": 6000 }
+
+###
+# [M3] Menu: hapus (audit DELETE_MENU)
+DELETE {{host}}/api/menu-items/{{createMenu.response.body.$.data.id}}
+Authorization: Bearer {{loginAdmin.response.body.$.data.token}}
