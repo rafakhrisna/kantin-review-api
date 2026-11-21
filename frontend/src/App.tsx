@@ -3,6 +3,7 @@ import Navbar from './components/Navbar'
 import RequireAuth from './components/RequireAuth'
 import { AuthProvider } from './context/AuthContext'
 import { ToastProvider } from './context/ToastContext'
+import AuditLogPage from './pages/AuditLogPage'
 import LoginPage from './pages/LoginPage'
 import ProfilePage from './pages/ProfilePage'
 import RegisterPage from './pages/RegisterPage'
@@ -34,6 +35,11 @@ export default function App() {
               <Route element={<RequireAuth roles={['owner', 'admin']} />}>
                 <Route path="/stalls/new" element={<StallFormPage />} />
                 <Route path="/stalls/:id/edit" element={<StallFormPage />} />
+              </Route>
+
+              {/* Hanya admin */}
+              <Route element={<RequireAuth roles={['admin']} />}>
+                <Route path="/audit-logs" element={<AuditLogPage />} />
               </Route>
 
               <Route path="*" element={<NotFoundPage />} />

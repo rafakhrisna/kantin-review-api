@@ -20,3 +20,8 @@ export async function meRequest(signal?: AbortSignal) {
   const res = await api.get<Envelope<User>>('/auth/me', { signal })
   return res.data.data
 }
+
+// POST /auth/logout -> backend mencatat audit LOGOUT
+export async function logoutRequest() {
+  await api.post('/auth/logout')
+}
