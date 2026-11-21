@@ -51,3 +51,41 @@ export interface Envelope<T> {
   message?: string
   data: T
 }
+
+// ---------- Audit log (Tugas 5) ----------
+export interface AuditMetadata {
+  role?: string
+  ip_address?: string | null
+  user_agent?: string | null
+  result?: string
+  [key: string]: unknown
+}
+
+export interface AuditLog {
+  id: number
+  userId: number
+  userName: string
+  userEmail: string
+  action: string
+  targetTable: string
+  targetId: number
+  metadata: AuditMetadata | null
+  createdAt: string
+}
+
+export interface AuditPagination {
+  page: number
+  pageSize: number
+  total: number
+  totalPages: number
+}
+
+export interface AuditListResponse {
+  status: string
+  data: { items: AuditLog[]; pagination: AuditPagination }
+}
+
+export interface AuditDetailResponse {
+  status: string
+  data: AuditLog
+}

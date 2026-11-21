@@ -24,7 +24,7 @@ export function setUnauthorizedHandler(handler: (() => void) | null) {
   unauthorizedHandler = handler
 }
 
-const AUTH_PATHS = ['/auth/login', '/auth/register']
+const AUTH_PATHS = ['/auth/login', '/auth/register', '/auth/logout']
 
 api.interceptors.response.use(
   (response) => response,

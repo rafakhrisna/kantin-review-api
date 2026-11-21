@@ -3,11 +3,13 @@ export default function Pagination({
   totalPages,
   total,
   onChange,
+  unit = 'warung',
 }: {
   page: number
   totalPages: number
   total: number
   onChange: (page: number) => void
+  unit?: string
 }) {
   return (
     <nav className="pagination" aria-label="Pagination">
@@ -15,7 +17,7 @@ export default function Pagination({
         ← Sebelumnya
       </button>
       <span>
-        Halaman <strong>{page}</strong> dari <strong>{Math.max(totalPages, 1)}</strong> · {total} warung
+        Halaman <strong>{page}</strong> dari <strong>{Math.max(totalPages, 1)}</strong> · {total} {unit}
       </span>
       <button className="btn btn-ghost" disabled={page >= totalPages} onClick={() => onChange(page + 1)}>
         Berikutnya →

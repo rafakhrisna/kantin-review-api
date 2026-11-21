@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { loginRequest, meRequest, registerRequest } from '../api/auth'
+import { loginRequest, logoutRequest, meRequest, registerRequest } from '../api/auth'
 import { setUnauthorizedHandler, tokenStorage } from '../api/client'
 import type { User } from '../types'
 import { isCanceled } from '../utils/error'
@@ -12,7 +12,7 @@ interface AuthContextValue {
   loading: boolean 
   login: (email: string, password: string) => Promise<User>
   register: (name: string, email: string, password: string) => Promise<void>
-  logout: () => void
+  logout: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -56,7 +56,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await registerRequest(name, email, password)
   }, [])
 
-  const logout = useCallback(() => {
+    // Logout: beri tahu backend (supaya audit LOGOUT tercatat), lalu buang token di sisi client.
+  // Kalau request ke backend gagal (server mati / token kedaluwarsa), logout di sisi client tetap berjalan.
+  const logout = useCallback(async () => {
+    try {
+      await logoutRequest()
+    } catch {
+      // diabaikan: sesi lokal tetap harus berakhir
+    }
     tokenStorage.clear()
     setUser(null)
   }, [])

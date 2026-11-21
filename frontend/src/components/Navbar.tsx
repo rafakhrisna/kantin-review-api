@@ -8,8 +8,8 @@ export default function Navbar() {
   const navigate = useNavigate()
   const canCreate = user?.role === 'owner' || user?.role === 'admin'
 
-  function handleLogout() {
-    logout()
+  async function handleLogout() {
+    await logout()
     notify('info', 'Anda telah logout.')
     navigate('/')
   }
@@ -25,6 +25,7 @@ export default function Navbar() {
             Warung
           </NavLink>
           {canCreate && <NavLink to="/stalls/new">+ Tambah Warung</NavLink>}
+          {user?.role === 'admin' && <NavLink to="/audit-logs">Audit Log</NavLink>}
         </nav>
         <div className="nav-user">
           {user ? (
