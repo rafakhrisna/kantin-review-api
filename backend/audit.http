@@ -127,3 +127,17 @@ Content-Type: application/json
 # [M3] Menu: hapus (audit DELETE_MENU)
 DELETE {{host}}/api/menu-items/{{createMenu.response.body.$.data.id}}
 Authorization: Bearer {{loginAdmin.response.body.$.data.token}}
+
+###
+# [R1] Customer menambah review -> audit CREATE_REVIEW
+# @name createReview
+POST {{host}}/stalls/2/reviews
+Authorization: Bearer {{loginCustomer.response.body.$.data.token}}
+Content-Type: application/json
+
+{ "rating": 5, "comment": "Enak, uji audit" }
+
+###
+# [R2] Admin menghapus review tadi -> audit DELETE_REVIEW
+DELETE {{host}}/api/reviews/{{createReview.response.body.$.data.id}}
+Authorization: Bearer {{loginAdmin.response.body.$.data.token}}
